@@ -53,7 +53,7 @@ void main() {
   if(gambarCube==0) {
     gl_Position = projectionMatrix * viewMatrix * modelMatrix * translasi  * scalationMatrix * vec4(vPosition, 0.0, 1.0);
     fColor = vColor;
-    fNormal = vec3(translasi  * scalationMatrix * vec4(0.0, 0.0, 1.0, 1.0));
+    fNormal = vec3(translasi  * scalationMatrix * vec4(0.0, 0.0, 0.0, 1.0));
     fPosition = vec3(vPosition, 0.0);
   }
   else if(gambarCube==2)
