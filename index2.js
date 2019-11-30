@@ -25,7 +25,7 @@
         glMatrix.mat4.translate(mm, mm, [0.0, 0.0, -2.0]);
         gl.uniformMatrix4fv(mmLoc, false, mm);  
 
-        // Definisi untuk matrix view dan projection
+        // Definisi untuk matrix view dan projection(kamera)
         var vmLoc = gl.getUniformLocation(program, 'viewMatrix');
         var vm = glMatrix.mat4.create();
         glMatrix.mat4.lookAt(vm,
@@ -45,16 +45,18 @@
         );
         gl.uniformMatrix4fv(pmLoc, false, pm);
 
+        // Pencahayaan
         var dcLoc = gl.getUniformLocation(program, 'diffuseColor');
         var dc = glMatrix.vec3.fromValues(1.0, 1.0, 1.0);  // rgb
         gl.uniform3fv(dcLoc, dc);
         var ddLoc = gl.getUniformLocation(program, 'diffusePosition');
-        var dd = glMatrix.vec3.fromValues(0.5, 3.0, 4.0);  // xyz
+        var dd = glMatrix.vec3.fromValues(0.0, 0.0, 0.0);  // xyz
         gl.uniform3fv(ddLoc, dd);
         var acLoc = gl.getUniformLocation(program, 'ambientColor');
-        var ac = glMatrix.vec3.fromValues(0.2, 0.2, 0.2);
+        var ac = glMatrix.vec3.fromValues(0.17, 0.40, 0.53);
         gl.uniform3fv(acLoc, ac);
 
+        // Variabel translasi
         var scaleXUniformLocation = gl.getUniformLocation(program, 'scaleX');
         var scaleX = 1.0;
         gl.uniform1f(scaleXUniformLocation, scaleX);
@@ -78,6 +80,10 @@
         var gambarCubeUniformLocation = gl.getUniformLocation(program, 'gambarCube');
         var gambarCube = 1;
         gl.uniform1i(gambarCubeUniformLocation, gambarCube);
+
+        var fgambarCubeUniformLocation = gl.getUniformLocation(program, 'fgambarCube');
+        var fgambarCube = 1;
+        gl.uniform1i(fgambarCubeUniformLocation, fgambarCube);
 
         render();
         window.addEventListener('resize', resizer);
@@ -158,17 +164,21 @@
             gl.uniform1f(scaleXUniformLocation, scaleX);
 
             gambarCube=0;
+            fgambarCube=0;
             gl.uniform1i(gambarCubeUniformLocation, gambarCube);
+            gl.uniform1i(fgambarCubeUniformLocation, fgambarCube);
             gl.drawArrays(gl.TRIANGLE_STRIP, 0, nWord);
 
             gambarCube=2;
+            fgambarCube=2;
             gl.uniform1i(gambarCubeUniformLocation, gambarCube);
-            gl.drawArrays(gl.TRIANGLES, 0, 30);
+            gl.uniform1i(fgambarCubeUniformLocation, fgambarCube);
+            gl.drawArrays(gl.TRIANGLES, 0, 36);
 
             gl.enable(gl.DEPTH_TEST);
     
             requestAnimationFrame(render);
-          }
+        }
     
         function initGlSize() {
             var width = canvas.getAttribute("width"), height = canvas.getAttribute("height");
@@ -202,7 +212,6 @@
             var lingkaran =[];
             var vertexBuffer = gl.createBuffer();
 
-            
             for (var i=90.0; i<=270; i+=1) {
                 var j = i * Math.PI / 180;
                 var vert1 = [
@@ -242,8 +251,6 @@
 
         function initCubeVertices() {
             var verticesCubePlane = [];
-            var verticesCubeLine = [];
-            // console.log(verticesCubeLine);
             var cubePoints = [
                 [ -0.5, -0.5,  0.5 ],
                 [ -0.5,  0.5,  0.5 ],
@@ -274,7 +281,7 @@
                 [  0.0,  1.0,  0.0 ], // atas
                 []
               ];
-              
+
               function quad(a, b, c, d) {
                 var indices = [a, b, c, a, c, d];
                 for (var i=0; i < indices.length; i++) {
@@ -285,88 +292,67 @@
                         verticesCubePlane.push(cubeColors[a][j]);
                     }
                     for (var j=0; j < 3; j++) {
-                        verticesCubePlane.push(cubeNormals[a][j]);
+                        verticesCubePlane.push(-1*cubeNormals[a][j]);
                     }
-                    switch (indices[i]) {
-                        case a:
-                            verticesCubePlane.push(0.0);
-                            verticesCubePlane.push(0.0);
-                        break;
-                        case b:
-                            verticesCubePlane.push(0.0);
-                            verticesCubePlane.push(1.0);
-                        break;
-                        case c:
-                            verticesCubePlane.push(1.0);
-                            verticesCubePlane.push(1.0);
-                        break;
-                        case d:
-                            verticesCubePlane.push(1.0);
-                            verticesCubePlane.push(0.0);
-                        break;
+                    // switch (indices[i]) {
+                    //     case a:
+                    //         verticesCubePlane.push(0.0);
+                    //         verticesCubePlane.push(0.0);
+                    //     break;
+                    //     case b:
+                    //         verticesCubePlane.push(0.0);
+                    //         verticesCubePlane.push(1.0);
+                    //     break;
+                    //     case c:
+                    //         verticesCubePlane.push(1.0);
+                    //         verticesCubePlane.push(1.0);
+                    //     break;
+                    //     case d:
+                    //         verticesCubePlane.push(1.0);
+                    //         verticesCubePlane.push(0.0);
+                    //     break;
                     
-                        default:
-                        break;
-                    }
+                    //     default:
+                    //     break;
+                    // }
                 }
-              }
+            }
+
             //   quad(1, 0, 3, 2);
-              quad(2, 3, 7, 6);
-              quad(3, 0, 4, 7);
-              quad(4, 5, 6, 7);
-              quad(5, 4, 0, 1);
-              quad(6, 5, 1, 2);
+            quad(2, 3, 7, 6);
+            quad(3, 0, 4, 7);
+            quad(4, 5, 6, 7);
+            quad(5, 4, 0, 1);
+            quad(6, 5, 1, 2);
 
             // Membuat vertex buffer object (CPU Memory <==> GPU Memory)
-            var vertexBuffer = gl.createBuffer();
-
-            gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+            var vertexBufferObject = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, vertexBufferObject);
             gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verticesCubePlane), gl.STATIC_DRAW);
 
             // Membuat sambungan untuk attribute
-            var vPositionCubePlane = gl.getAttribLocation(program, 'vPositionCubePlane');
-            // var vColorCubePlane = gl.getAttribLocation(program, 'vColorCubePlane');
-            var vCubePlaneNormal = gl.getAttribLocation(program, 'vCubePlaneNormal');
-            var vCubePlaneTexCoord = gl.getAttribLocation(program, 'vCubePlaneTexCoord');
+            var vPosition = gl.getAttribLocation(program, 'vPositionCubePlane');
+            var vColor = gl.getAttribLocation(program, 'vColorCubePlane');
+            var vNormal = gl.getAttribLocation(program, 'vNormalCubePlane');
+            // var vTexCoord = gl.getAttribLocation(program, 'vTexCoordCubePlane');
             gl.vertexAttribPointer(
-                vPositionCubePlane,    // variabel yang memegang posisi attribute di shader
-                3,            // jumlah elemen per atribut
-                gl.FLOAT,     // tipe data atribut
-                gl.FALSE, 
-                11 * Float32Array.BYTES_PER_ELEMENT, // ukuran byte tiap verteks (overall) 
-                0                                   // offset dari posisi elemen di array
+            vPosition,                              // variabel yang memegang posisi attribute di shader
+            3,                                      // jumlah elemen per atribut
+            gl.FLOAT,                               // tipe data atribut
+            gl.FALSE, 
+            9 * Float32Array.BYTES_PER_ELEMENT,    // ukuran byte tiap verteks (overall) 
+            0                                       // offset dari posisi elemen di array
             );
-            // gl.vertexAttribPointer(vColorCubePlane, 3, gl.FLOAT, gl.FALSE,
-            //     11 * Float32Array.BYTES_PER_ELEMENT, 3 * Float32Array.BYTES_PER_ELEMENT);
-            gl.vertexAttribPointer(vCubePlaneNormal, 3, gl.FLOAT, gl.FALSE,
-                11 * Float32Array.BYTES_PER_ELEMENT, 6 * Float32Array.BYTES_PER_ELEMENT);
-            gl.vertexAttribPointer(vCubePlaneTexCoord, 2, gl.FLOAT, gl.FALSE,
-                11 * Float32Array.BYTES_PER_ELEMENT, 9 * Float32Array.BYTES_PER_ELEMENT);
+            gl.vertexAttribPointer(vColor, 3, gl.FLOAT, gl.FALSE,
+              9 * Float32Array.BYTES_PER_ELEMENT, 3 * Float32Array.BYTES_PER_ELEMENT);
+            gl.vertexAttribPointer(vNormal, 3, gl.FLOAT, gl.FALSE,
+            9 * Float32Array.BYTES_PER_ELEMENT, 6 * Float32Array.BYTES_PER_ELEMENT);
+            // gl.vertexAttribPointer(vTexCoord, 2, gl.FLOAT, gl.FALSE,
+            // 11 * Float32Array.BYTES_PER_ELEMENT, 9 * Float32Array.BYTES_PER_ELEMENT);
             gl.enableVertexAttribArray(vPosition);
-            gl.enableVertexAttribArray(vPositionCubePlane);
-            // gl.enableVertexAttribArray(vColorCubePlane);
-            gl.enableVertexAttribArray(vCubePlaneNormal);
-            gl.enableVertexAttribArray(vCubePlaneTexCoord);
-
-            // var vertexBuffer2 = gl.createBuffer();
-
-            // gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer2);
-            // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verticesCubeLine), gl.STATIC_DRAW);
-
-            // var vPositionCubeLine = gl.getAttribLocation(program, 'vPositionCubeLine');
-            // var vColorCubeLine = gl.getAttribLocation(program, 'vColorCubeLine');
-            // gl.vertexAttribPointer(
-            //     vPositionCubeLine,    // variabel yang memegang posisi attribute di shader
-            //     3,            // jumlah elemen per atribut
-            //     gl.FLOAT,     // tipe data atribut
-            //     gl.FALSE, 
-            //     6 * Float32Array.BYTES_PER_ELEMENT, // ukuran byte tiap verteks (overall) 
-            //     0                                   // offset dari posisi elemen di array
-            // );
-            // gl.vertexAttribPointer(vColorCubeLine, 3, gl.FLOAT, gl.FALSE,
-            // 6 * Float32Array.BYTES_PER_ELEMENT, 3 * Float32Array.BYTES_PER_ELEMENT);
-            // gl.enableVertexAttribArray(vPositionCubeLine);
-            // gl.enableVertexAttribArray(vColorCubeLine);
+            gl.enableVertexAttribArray(vColor);
+            gl.enableVertexAttribArray(vNormal);
+            // gl.enableVertexAttribArray(vTexCoord);
         }
     
         function resizer() {

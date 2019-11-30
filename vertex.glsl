@@ -1,31 +1,37 @@
 precision mediump float;
 
+// Attribute Huruf
 attribute vec2 vPosition;
-attribute vec3 vPositionCubePlane;
-attribute vec3 vCubePlaneNormal;
-attribute vec2 vCubePlaneTexCoord; 
 attribute vec3 vColor;
 
-// attribute vec3 vPositionCubeLine;
-// attribute vec3 vColorCubePlane;
-// attribute vec3 vColorCubeLine;
+// Attribute Cube
+attribute vec3 vPositionCubePlane;      // Position
+attribute vec3 vColorCubePlane;         // Warna
+attribute vec3 vNormalCubePlane;        // Normal
+attribute vec2 vTexCoordCubePlane;      // Teksture
 
-varying vec3 fColor;
-varying vec2 fTexCoord;
-// varying int fgambarCube;
-
-// Translasi
+// Variabel yang menangani semua tranformasi
 uniform float scaleX;
 uniform float constant;
 uniform float jalanX;
 uniform float jalanY;
 uniform float jalanZ;
 
-uniform int gambarCube;
+// Attribute untuk kamera
 uniform mat4 modelMatrix;
 uniform mat4 viewMatrix;
 uniform mat4 projectionMatrix;
 
+uniform vec3 diffusePosition;
+varying vec3 fdiffusePosition;
+
+// Variabel Flag
+uniform int gambarCube;
+
+// Variabel varying ke fragment.glsl
+varying vec3 fColor;
+varying vec3 fNormal;
+varying vec3 fPosition;
 
 void main() {
   mat4 translasi = mat4
@@ -41,19 +47,20 @@ void main() {
     0.0, 0.0, 1.0, 0.0,
     0.0, 0.0, 0.0, 1.0
   );
+
+  fdiffusePosition = vec3(translasi  * scalationMatrix * vec4(diffusePosition, 1.0));
+
   if(gambarCube==0) {
     gl_Position = projectionMatrix * viewMatrix * modelMatrix * translasi  * scalationMatrix * vec4(vPosition, 0.0, 1.0);
     fColor = vColor;
+    fNormal = vec3(translasi  * scalationMatrix * vec4(0.0, 0.0, 1.0, 1.0));
+    fPosition = vec3(vPosition, 0.0);
   }
-  // else if(gambarCube==1){
-  //   gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(vPositionCubeLine, 1.0);
-  //   fColor = vColorCubeLine;
-  // }
   else if(gambarCube==2)
   {
     gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(vPositionCubePlane, 1.0);
-    fTexCoord = vCubePlaneTexCoord;
-    // fgambarCube = gambarCube;
-    // fColor = vColorCubePlane;
+    fColor = vColorCubePlane;
+    fNormal = vNormalCubePlane;
+    fPosition = vPositionCubePlane;
   }
 }
