@@ -1,5 +1,5 @@
 (function(){
-    var canvas, gl, program, nWord, pindahX =0.0053, pindahY = 0.0053, pindahZ=0.0053;
+    var canvas, gl, program, nWord, pindahX =0.0053, pindahY = 0.0053, pindahZ=0.0053, nCube;
 
     glUtils.SL.init({ callback:function() { main(); } });
 
@@ -17,7 +17,7 @@
         gl.useProgram(program);
 
         nWord = initWordVertices();
-        initCubeVertices();
+        nCube = initCubeVertices();
 
         // Definisi untuk matriks model
         var mmLoc = gl.getUniformLocation(program, 'modelMatrix');
@@ -30,7 +30,7 @@
         var vm = glMatrix.mat4.create();
         glMatrix.mat4.lookAt(vm,
             [0.0, 0.0, 0.0], // di mana posisi kamera (posisi)
-            [0.0, 0.0, -2.0], // ke mana kamera menghadap (vektor)
+            [0.0, 0.0, -1.0], // ke mana kamera menghadap (vektor)
             [0.0, 1.0, 0.0]  // ke mana arah atas kamera (vektor)
           );
           gl.uniformMatrix4fv(vmLoc, false, vm);
@@ -85,6 +85,28 @@
         var fgambarCube = 1;
         gl.uniform1i(fgambarCubeUniformLocation, fgambarCube);
 
+        // Uniform untuk texture
+        var sampler0Loc = gl.getUniformLocation(program, 'sampler0');
+        gl.uniform1i(sampler0Loc, 0);
+
+        // Create a texture.
+        var texture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        
+        // Fill the texture with a 1x1 blue pixel.
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE,
+            new Uint8Array([0, 0, 255, 255]));
+
+        // Asynchronously load an image
+        var image = new Image();
+        image.src = "images/tekstur.jpg";
+        image.addEventListener('load', function() {
+            // Now that the image has loaded make copy it to the texture.
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,gl.UNSIGNED_BYTE, image);
+            gl.generateMipmap(gl.TEXTURE_2D);
+        });
+
         render();
         window.addEventListener('resize', resizer);
 
@@ -92,7 +114,7 @@
         var vertexKananTerjauh = 0.15;
         var vertexAtasTerjauh  = 0.30;
         var vertexBawahTerjauh = -0.6;
-        var ukuranTerjauh = 0.5;
+        var ukuranTerjauh = 0.8;
         var depan=0, kanan=1, belakang=2, bawah=3, kiri=4, atas=5;
 
         function bounceChecking(){
@@ -163,17 +185,15 @@
 
             gl.uniform1f(scaleXUniformLocation, scaleX);
 
-            gambarCube=0;
-            fgambarCube=0;
-            gl.uniform1i(gambarCubeUniformLocation, gambarCube);
-            gl.uniform1i(fgambarCubeUniformLocation, fgambarCube);
-            gl.drawArrays(gl.TRIANGLE_STRIP, 0, nWord);
-
             gambarCube=2;
-            fgambarCube=2;
             gl.uniform1i(gambarCubeUniformLocation, gambarCube);
-            gl.uniform1i(fgambarCubeUniformLocation, fgambarCube);
-            gl.drawArrays(gl.TRIANGLES, 0, 36);
+            gl.uniform1i(fgambarCubeUniformLocation, gambarCube);
+            gl.drawArrays(gl.TRIANGLES, 0, nCube);
+
+            gambarCube=0;
+            gl.uniform1i(gambarCubeUniformLocation, gambarCube);
+            gl.uniform1i(fgambarCubeUniformLocation, gambarCube);
+            gl.drawArrays(gl.TRIANGLE_STRIP, 0, nWord);
 
             gl.enable(gl.DEPTH_TEST);
     
@@ -252,14 +272,14 @@
         function initCubeVertices() {
             var verticesCubePlane = [];
             var cubePoints = [
-                [ -0.5, -0.5,  0.5 ],
-                [ -0.5,  0.5,  0.5 ],
-                [  0.5,  0.5,  0.5 ],
-                [  0.5, -0.5,  0.5 ],
-                [ -0.5, -0.5, -0.5 ],
-                [ -0.5,  0.5, -0.5 ],
-                [  0.5,  0.5, -0.5 ],
-                [  0.5, -0.5, -0.5 ]
+                [ -0.8, -0.8,  0.8 ],
+                [ -0.8,  0.8,  0.8 ],
+                [  0.8,  0.8,  0.8 ],
+                [  0.8, -0.8,  0.8 ],
+                [ -0.8, -0.8, -0.8 ],
+                [ -0.8,  0.8, -0.8 ],
+                [  0.8,  0.8, -0.8 ],
+                [  0.8, -0.8, -0.8 ]
               ];
               var cubeColors = [
                 [],
@@ -294,31 +314,31 @@
                     for (var j=0; j < 3; j++) {
                         verticesCubePlane.push(-1*cubeNormals[a][j]);
                     }
-                    // switch (indices[i]) {
-                    //     case a:
-                    //         verticesCubePlane.push(0.0);
-                    //         verticesCubePlane.push(0.0);
-                    //     break;
-                    //     case b:
-                    //         verticesCubePlane.push(0.0);
-                    //         verticesCubePlane.push(1.0);
-                    //     break;
-                    //     case c:
-                    //         verticesCubePlane.push(1.0);
-                    //         verticesCubePlane.push(1.0);
-                    //     break;
-                    //     case d:
-                    //         verticesCubePlane.push(1.0);
-                    //         verticesCubePlane.push(0.0);
-                    //     break;
+                    switch (indices[i]) {
+                        case a:
+                            verticesCubePlane.push( (a-2)*0.125 );        // X
+                            verticesCubePlane.push(0.0);        // Y
+                        break;
+                        case b:
+                            verticesCubePlane.push( (a-2)*0.125 );
+                            verticesCubePlane.push(1.0);
+                        break;
+                        case c:
+                            verticesCubePlane.push( (a-1)*0.125 );
+                            verticesCubePlane.push(1.0);
+                        break;
+                        case d:
+                            verticesCubePlane.push( (a-1)*0.125 );
+                            verticesCubePlane.push(0.0);
+                        break;
                     
-                    //     default:
-                    //     break;
-                    // }
+                        default:
+                        break;
+                    }
                 }
             }
 
-            //   quad(1, 0, 3, 2);
+            // quad(1, 0, 3, 2);
             quad(2, 3, 7, 6);
             quad(3, 0, 4, 7);
             quad(4, 5, 6, 7);
@@ -334,25 +354,29 @@
             var vPosition = gl.getAttribLocation(program, 'vPositionCubePlane');
             var vColor = gl.getAttribLocation(program, 'vColorCubePlane');
             var vNormal = gl.getAttribLocation(program, 'vNormalCubePlane');
-            // var vTexCoord = gl.getAttribLocation(program, 'vTexCoordCubePlane');
+            var vTexCoord = gl.getAttribLocation(program, 'vTexCoordCubePlane');
             gl.vertexAttribPointer(
             vPosition,                              // variabel yang memegang posisi attribute di shader
             3,                                      // jumlah elemen per atribut
             gl.FLOAT,                               // tipe data atribut
             gl.FALSE, 
-            9 * Float32Array.BYTES_PER_ELEMENT,    // ukuran byte tiap verteks (overall) 
+            11 * Float32Array.BYTES_PER_ELEMENT,    // ukuran byte tiap verteks (overall) 
             0                                       // offset dari posisi elemen di array
             );
             gl.vertexAttribPointer(vColor, 3, gl.FLOAT, gl.FALSE,
-              9 * Float32Array.BYTES_PER_ELEMENT, 3 * Float32Array.BYTES_PER_ELEMENT);
+              11 * Float32Array.BYTES_PER_ELEMENT, 3 * Float32Array.BYTES_PER_ELEMENT);
             gl.vertexAttribPointer(vNormal, 3, gl.FLOAT, gl.FALSE,
-            9 * Float32Array.BYTES_PER_ELEMENT, 6 * Float32Array.BYTES_PER_ELEMENT);
-            // gl.vertexAttribPointer(vTexCoord, 2, gl.FLOAT, gl.FALSE,
-            // 11 * Float32Array.BYTES_PER_ELEMENT, 9 * Float32Array.BYTES_PER_ELEMENT);
+            11 * Float32Array.BYTES_PER_ELEMENT, 6 * Float32Array.BYTES_PER_ELEMENT);
+            gl.vertexAttribPointer(vTexCoord, 2, gl.FLOAT, gl.FALSE,
+            11 * Float32Array.BYTES_PER_ELEMENT, 9 * Float32Array.BYTES_PER_ELEMENT);
             gl.enableVertexAttribArray(vPosition);
             gl.enableVertexAttribArray(vColor);
             gl.enableVertexAttribArray(vNormal);
-            // gl.enableVertexAttribArray(vTexCoord);
+            gl.enableVertexAttribArray(vTexCoord);
+
+            var n = verticesCubePlane.length / 11;
+
+            return n;
         }
     
         function resizer() {

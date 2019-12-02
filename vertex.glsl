@@ -32,6 +32,7 @@ uniform int gambarCube;
 varying vec3 fColor;
 varying vec3 fNormal;
 varying vec3 fPosition;
+varying vec2 fTexCoord;
 
 void main() {
   mat4 translasi = mat4
@@ -62,5 +63,6 @@ void main() {
     fColor = vColorCubePlane;
     fNormal = vNormalCubePlane;
     fPosition = vPositionCubePlane;
+    fTexCoord = vTexCoordCubePlane;
   }
 }
